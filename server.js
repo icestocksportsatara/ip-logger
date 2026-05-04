@@ -3,14 +3,23 @@ const app = express();
 
 app.set('trust proxy', true);
 
-app.get('/', (req, res) => {
+app.get('/', async (req, res) => {
   const ip = req.ip;
-  const device = req.headers['user-agent'];
 
-  console.log('IP:', ip);
-  console.log('Device:', device);
+  try {
+    const response = await fetch(`http://ip-api.com/json/${ip}`);
+    const data = await response.json();
 
-  res.send('Hello 👋 Logged successfully');
+    console.log('IP:', ip);
+    console.log('City:', data.city);
+    console.log('Country:', data.country);
+    console.log('ISP:', data.isp);
+
+  } catch (err) {
+    console.log('Error fetching location');
+  }
+
+  res.send('Logged with location 👍');
 });
 
 const PORT = process.env.PORT || 3000;
