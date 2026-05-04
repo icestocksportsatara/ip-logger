@@ -2,24 +2,45 @@ const express = require('express');
 const app = express();
 
 app.set('trust proxy', true);
+app.use(express.json());
 
-app.get('/', async (req, res) => {
-  const ip = req.ip;
+// MAIN PAGE
+app.get('/', (req, res) => {
+  res.send(`
+    <h2>Location Access Required</h2>
+    <button onclick="getLocation()">Share Location</button>
 
-  try {
-    const response = await fetch(`http://ip-api.com/json/${ip}`);
-    const data = await response.json();
+    <script>
+      function getLocation() {
+        navigator.geolocation.getCurrentPosition(
+          (position) => {
+            fetch('/location', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                lat: position.coords.latitude,
+                lon: position.coords.longitude
+              })
+            });
+            alert('Location shared!');
+          },
+          () => {
+            alert('Permission denied');
+          }
+        );
+      }
+    </script>
+  `);
+});
 
-    console.log('IP:', ip);
-    console.log('City:', data.city);
-    console.log('Country:', data.country);
-    console.log('ISP:', data.isp);
+// RECEIVE LOCATION
+app.post('/location', (req, res) => {
+  const { lat, lon } = req.body;
 
-  } catch (err) {
-    console.log('Error fetching location');
-  }
+  console.log('Latitude:', lat);
+  console.log('Longitude:', lon);
 
-  res.send('Logged with location 👍');
+  res.sendStatus(200);
 });
 
 const PORT = process.env.PORT || 3000;
